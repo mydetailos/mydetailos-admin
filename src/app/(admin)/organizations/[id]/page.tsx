@@ -48,6 +48,7 @@ import {
   patchOrganizationProfile,
   createOrganizationPaymentLink,
   resendOrganizationPaymentLink,
+  deleteOrganization,
   type CreatePaymentLinkResult,
   type PaymentLinkSendVia,
   type PaymentLinkDiscountType,
@@ -356,6 +357,9 @@ export default function OrgDetailPage() {
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [lifecycleLoading, setLifecycleLoading] = useState(false);
   const [exportingZip, setExportingZip] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
 
   const [addBranchOpen, setAddBranchOpen] = useState(false);
   const [addBranchLoading, setAddBranchLoading] = useState(false);
@@ -750,6 +754,21 @@ export default function OrgDetailPage() {
       toast.error(e instanceof Error ? e.message : "Failed to restore.");
     } finally {
       setLifecycleLoading(false);
+    }
+  }
+
+  async function handleDeleteOrganization() {
+    if (!org) return;
+    setDeleteLoading(true);
+    try {
+      await deleteOrganization(org.organization.id);
+      toast.success(`Organization "${org.organization.name}" permanently deleted.`);
+      setDeleteOpen(false);
+      router.push("/organizations");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete organization.");
+    } finally {
+      setDeleteLoading(false);
     }
   }
 
@@ -1527,6 +1546,82 @@ export default function OrgDetailPage() {
             </OrgCardBody>
           </OrgCard>
 
+          {/* Row 8 – Danger Zone */}
+          <div
+            style={{
+              background: "var(--card)",
+              border: "1px solid #fecaca",
+              borderRadius: 14,
+              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "16px 20px",
+                borderBottom: "1px solid #fee2e2",
+                background: "#fef2f2",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#991b1b" }}>
+                  Danger Zone
+                </h3>
+                <p style={{ margin: "2px 0 0", fontSize: 13, color: "#b91c1c" }}>
+                  Irreversible actions for this organization
+                </p>
+              </div>
+            </div>
+            <div
+              style={{
+                padding: "20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 16,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--foreground)" }}>
+                  Delete this organization
+                </p>
+                <p
+                  style={{
+                    margin: "4px 0 0",
+                    fontSize: 13,
+                    color: "var(--muted-foreground)",
+                    maxWidth: 640,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Permanently delete <strong style={{ color: "var(--foreground)" }}>{org.organization.name}</strong>{" "}
+                  (<code style={{ fontSize: 12 }}>{org.organization.id}</code>) and all associated data including branches,
+                  users, job cards, invoices, vehicles, customers, and subscription records directly from the database.
+                  This action is permanent and cannot be undone.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setDeleteConfirmInput("");
+                  setDeleteOpen(true);
+                }}
+                style={{
+                  background: "#dc2626",
+                  color: "#ffffff",
+                  minWidth: 160,
+                }}
+              >
+                Delete organization
+              </Button>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -2064,6 +2159,143 @@ export default function OrgDetailPage() {
                   </>
                 ) : (
                   "Create branch"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Organization Confirmation Modal */}
+      {deleteOpen && org && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 60,
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              background: "var(--card)",
+              borderRadius: 16,
+              boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+              width: "100%",
+              maxWidth: 520,
+              overflow: "hidden",
+              border: "1px solid var(--border)",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 24px",
+                borderBottom: "1px solid var(--border)",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: "#fee2e2",
+                  color: "#dc2626",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: "#b91c1c" }}>
+                  Delete organization permanently?
+                </h2>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--muted-foreground)" }}>
+                  This will completely remove all database records
+                </p>
+              </div>
+            </div>
+
+            <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+              <div
+                style={{
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  borderRadius: 8,
+                  padding: "12px 14px",
+                  fontSize: 13,
+                  color: "#991b1b",
+                  lineHeight: 1.5,
+                }}
+              >
+                <strong>Warning:</strong> All branches, staff users, customers, vehicles, appointments, invoices, inspections, and billing records for <strong>{org.organization.name}</strong> will be permanently wiped from the database.
+              </div>
+
+              <div style={{ fontSize: 13, color: "var(--foreground)" }}>
+                To confirm, type <strong style={{ userSelect: "all" }}>{org.organization.name}</strong> below:
+              </div>
+
+              <Input
+                placeholder={`Type "${org.organization.name}" to confirm`}
+                value={deleteConfirmInput}
+                onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                disabled={deleteLoading}
+                autoFocus
+              />
+            </div>
+
+            <div
+              style={{
+                padding: "14px 24px 18px",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 10,
+                borderTop: "1px solid var(--border)",
+                background: "var(--secondary)",
+              }}
+            >
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteOpen(false);
+                  setDeleteConfirmInput("");
+                }}
+                disabled={deleteLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={
+                  deleteLoading ||
+                  deleteConfirmInput.trim().toLowerCase() !==
+                    org.organization.name.trim().toLowerCase()
+                }
+                onClick={handleDeleteOrganization}
+                style={{
+                  background:
+                    deleteConfirmInput.trim().toLowerCase() ===
+                    org.organization.name.trim().toLowerCase()
+                      ? "#dc2626"
+                      : undefined,
+                  minWidth: 150,
+                }}
+              >
+                {deleteLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Deleting…
+                  </>
+                ) : (
+                  "Delete permanently"
                 )}
               </Button>
             </div>

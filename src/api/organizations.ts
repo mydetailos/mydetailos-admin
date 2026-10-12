@@ -168,3 +168,10 @@ export async function resendOrganizationPaymentLink(
     { medium }
   );
 }
+
+export async function deleteOrganization(
+  orgId: string
+): Promise<{ deleted: boolean; organizationId: string; name: string }> {
+  return apiClient.delete(`/api/platform/organizations/${encodeURIComponent(orgId)}`);
+}
+
