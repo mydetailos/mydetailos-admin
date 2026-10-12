@@ -100,8 +100,10 @@ export default function MessagingPage() {
       });
       toast.success(
         channel === "email"
-          ? `Test email sent to ${recipient}.`
-          : `Test ${channel === "sms" ? "SMS" : "WhatsApp"} sent to ${recipient}.`
+          ? `Email submitted to ${recipient}.`
+          : channel === "whatsapp"
+            ? `WhatsApp message sent to ${recipient}`
+            : `SMS message submitted to ${recipient}.`
       );
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to send");
