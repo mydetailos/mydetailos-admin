@@ -190,8 +190,8 @@ export default function SupportTicketsPage() {
           limit: 200,
           search: search.trim() || undefined,
         });
-        setTickets(res.tickets);
-        setOpenCount(res.openCount);
+        setTickets(res?.tickets ?? []);
+        setOpenCount(res?.openCount ?? 0);
         void refreshNotify({ silentToast: true });
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Failed to load support tickets");

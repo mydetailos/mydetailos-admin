@@ -51,16 +51,20 @@ async function request<T>(
     throw new ApiError(res.status, msg, code);
   }
 
-  // Backend wraps everything in { data, error }. Reject empty/error payloads
-  // even if the HTTP status is unexpectedly 200.
-  if (json && "data" in json) {
-    if (json.error || json.data == null) {
-      const msg = json.error?.message ?? "Invalid email or password";
-      throw new ApiError(401, msg, json.error?.code);
-    }
+  // If backend returned an error object even with 2xx status
+  if (json && typeof json === "object" && "error" in json && json.error) {
+    const msg = json.error.message ?? `HTTP ${res.status}`;
+    const code = json.error.code;
+    throw new ApiError(res.status || 400, msg, code);
+  }
+
+  // Backend wrapped in { data: ... }
+  if (json && typeof json === "object" && "data" in json) {
     return json.data as T;
   }
-  throw new ApiError(res.status || 500, "Unexpected API response");
+
+  // Direct unwrapped payload (e.g. { tickets, total }, { payments }, etc.)
+  return json as unknown as T;
 }
 
 export const apiClient = {

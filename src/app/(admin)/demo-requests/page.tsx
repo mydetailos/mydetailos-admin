@@ -81,9 +81,9 @@ export default function DemoRequestsPage() {
           search: search.trim() || undefined,
           status: status === "ALL" ? undefined : status,
         });
-        setDemos(res.demos);
-        setTotal(res.total);
-        setScheduledCount(res.scheduledCount);
+        setDemos(res?.demos ?? []);
+        setTotal(res?.total ?? 0);
+        setScheduledCount(res?.scheduledCount ?? 0);
         void refreshNotify({ silentToast: true });
 
         // Keep detail panel in sync without putting `selected` in deps (that caused a reload loop).

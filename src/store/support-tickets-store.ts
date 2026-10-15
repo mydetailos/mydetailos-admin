@@ -104,7 +104,7 @@ export const useSupportTicketsStore = create<SupportTicketsNotifyState>((set, ge
             : loadSeenKeys();
 
         const res = await listPlatformSupportTickets({ limit: 50 });
-        const attention = res.tickets
+        const attention = (res?.tickets ?? [])
           .filter(needsAttention)
           .sort((a, b) => {
             const aT = Date.parse(a.lastMessageAt ?? a.updatedAt) || 0;

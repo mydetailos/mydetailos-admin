@@ -70,7 +70,7 @@ export const useDemoRequestsStore = create<DemoRequestsNotifyState>((set, get) =
           limit: 50,
           status: "SCHEDULED",
         });
-        const items = res.demos
+        const items = (res?.demos ?? [])
           .slice()
           .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
           .slice(0, 10);
